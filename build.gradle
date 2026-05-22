@@ -39,6 +39,7 @@ dependencies {
     // Resilience4j (circuit breaker + retry for Open-Meteo WebClient calls)
     implementation 'io.github.resilience4j:resilience4j-reactor:2.3.0'
     implementation 'io.github.resilience4j:resilience4j-circuitbreaker:2.3.0'
+    implementation 'io.github.resilience4j:resilience4j-retry:2.3.0'
 
     // Observability
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
