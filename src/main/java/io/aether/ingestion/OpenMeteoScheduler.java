@@ -1,5 +1,6 @@
 package io.aether.ingestion;
 
+import io.aether.config.AetherProperties;
 import io.aether.domain.Location;
 import io.aether.domain.event.PollCycleCompletedEvent;
 import io.aether.ingestion.client.OpenMeteoAirQualityClient;
@@ -10,7 +11,6 @@ import io.aether.ingestion.mapper.SensorReadingMapper;
 import io.aether.ingestion.mqtt.MqttPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -32,13 +32,13 @@ public class OpenMeteoScheduler {
     private final ApplicationEventPublisher eventPublisher;
 
     public OpenMeteoScheduler(
-            @Value("${aether.locations}") List<Location> locations,
+            AetherProperties properties,
             OpenMeteoWeatherClient weatherClient,
             OpenMeteoAirQualityClient aqClient,
             SensorReadingMapper mapper,
             MqttPublisher mqttPublisher,
             ApplicationEventPublisher eventPublisher) {
-        this.locations = locations;
+        this.locations = properties.getLocationList();
         this.weatherClient = weatherClient;
         this.aqClient = aqClient;
         this.mapper = mapper;

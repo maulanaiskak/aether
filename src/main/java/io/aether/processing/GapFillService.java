@@ -1,9 +1,9 @@
 package io.aether.processing;
 
+import io.aether.config.AetherProperties;
 import io.aether.domain.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -24,10 +24,8 @@ public class GapFillService {
     private final List<Location> locations;
     private final DatabaseClient databaseClient;
 
-    public GapFillService(
-            @Value("${aether.locations}") List<Location> locations,
-            DatabaseClient databaseClient) {
-        this.locations = locations;
+    public GapFillService(AetherProperties properties, DatabaseClient databaseClient) {
+        this.locations = properties.getLocationList();
         this.databaseClient = databaseClient;
     }
 
