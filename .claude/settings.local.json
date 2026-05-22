@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk *)",
+      "Bash(./gradlew build *)",
+      "Bash(./gradlew dependencies *)",
+      "Bash(jar tf *)",
+      "Bash(./gradlew test *)",
+      "Bash(git add *)",
+      "Bash(git rm *)",
+      "Bash(git commit -m ' *)",
+      "Bash(./gradlew compileTestJava)",
+      "Bash(grep -v \"^$\")"
+    ]
+  }
+}
