@@ -1,6 +1,9 @@
 spring:
   application:
     name: aether
+  threads:
+    virtual:
+      enabled: true
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/aether
     username: aether
