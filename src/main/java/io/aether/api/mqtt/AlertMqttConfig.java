@@ -13,7 +13,12 @@ import org.springframework.messaging.MessageChannel;
 class AlertMqttConfig {
 
     @Bean
-    Mqttv5PahoMessageHandler alertOutboundHandler(
+    MessageChannel alertOutboundChannel() {
+        return new DirectChannel();
+    }
+
+    @Bean
+    IntegrationFlow alertOutboundFlow(
             @Value("${aether.mqtt.broker-url}") String brokerUrl) {
         var options = new MqttConnectionOptions();
         options.setServerURIs(new String[]{brokerUrl});
@@ -21,18 +26,8 @@ class AlertMqttConfig {
         var handler = new Mqttv5PahoMessageHandler(options, "aether-01-alert");
         handler.setDefaultQos(1);
         handler.setAsync(true);
-        return handler;
-    }
-
-    @Bean
-    IntegrationFlow alertOutboundFlow(Mqttv5PahoMessageHandler alertOutboundHandler) {
         return IntegrationFlow.from(alertOutboundChannel())
-                .handle(alertOutboundHandler)
+                .handle(handler)
                 .get();
-    }
-
-    @Bean
-    MessageChannel alertOutboundChannel() {
-        return new DirectChannel();
     }
 }

@@ -13,7 +13,12 @@ import org.springframework.messaging.MessageChannel;
 class MqttIntegrationConfig {
 
     @Bean
-    Mqttv5PahoMessageHandler mqttOutboundHandler(
+    MessageChannel mqttOutboundChannel() {
+        return new DirectChannel();
+    }
+
+    @Bean
+    IntegrationFlow mqttOutboundFlow(
             @Value("${aether.mqtt.broker-url}") String brokerUrl) {
         var options = new MqttConnectionOptions();
         options.setServerURIs(new String[]{brokerUrl});
@@ -21,18 +26,8 @@ class MqttIntegrationConfig {
         var handler = new Mqttv5PahoMessageHandler(options, "aether-01-pub");
         handler.setDefaultQos(1);
         handler.setAsync(true);
-        return handler;
-    }
-
-    @Bean
-    IntegrationFlow mqttOutboundFlow(Mqttv5PahoMessageHandler mqttOutboundHandler) {
         return IntegrationFlow.from(mqttOutboundChannel())
-                .handle(mqttOutboundHandler)
+                .handle(handler)
                 .get();
-    }
-
-    @Bean
-    MessageChannel mqttOutboundChannel() {
-        return new DirectChannel();
     }
 }
