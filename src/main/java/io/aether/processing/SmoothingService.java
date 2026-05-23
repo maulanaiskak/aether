@@ -37,10 +37,10 @@ public class SmoothingService {
         var smoothed = ewmaState.merge(sensorId, reading.value(),
                 (prev, curr) -> alpha * curr + (1 - alpha) * prev);
 
-        databaseClient.sql("UPDATE sensor_reading SET smoothed_value = :sv WHERE sensor_id = :sid AND observed_at = :oa")
-                .bind("sv", smoothed)
-                .bind("sid", sensorId)
-                .bind("oa", OffsetDateTime.ofInstant(reading.observedAt(), ZoneOffset.UTC))
+        databaseClient.sql("UPDATE sensor_reading SET smoothed_value = $1 WHERE sensor_id = $2 AND observed_at = $3")
+                .bind(0, smoothed)
+                .bind(1, sensorId)
+                .bind(2, OffsetDateTime.ofInstant(reading.observedAt(), ZoneOffset.UTC))
                 .fetch().rowsUpdated()
                 .subscribe(rows -> {}, err -> log.error("Failed to update smoothed value: {}", err.getMessage()));
     }
