@@ -12,6 +12,8 @@ import io.aether.ingestion.mqtt.MqttPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -44,6 +46,11 @@ public class OpenMeteoScheduler {
         this.mapper = mapper;
         this.mqttPublisher = mqttPublisher;
         this.eventPublisher = eventPublisher;
+    }
+
+    @EventListener(ContextRefreshedEvent.class)
+    public void pollOnStartup() {
+        poll();
     }
 
     @Scheduled(cron = "${aether.ingestion.poll-cron}")
