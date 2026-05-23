@@ -44,50 +44,49 @@ public class ReadingPersistenceHandler {
     }
 
     private Mono<Boolean> upsert(SensorReading r) {
-        return databaseClient.sql("""
-                INSERT INTO sensor_reading
-                    (sensor_id, location, latitude, longitude, metric, unit, value,
-                     observed_at, ingested_at, source, schema_version, quality_status)
-                VALUES
-                    (:sensorId, :location, :latitude, :longitude, :metric, :unit, :value,
-                     :observedAt, :ingestedAt, :source, :schemaVersion, :qualityStatus)
-                ON CONFLICT (sensor_id, observed_at) DO NOTHING
-                RETURNING id
-                """)
-                .bind("sensorId", r.sensorId().toString())
-                .bind("location", r.location())
-                .bind("latitude", r.sensorId().location())
-                .bind("longitude", r.sensorId().location())
-                .bind("metric", r.metric().name())
-                .bind("unit", r.unit())
-                .bindNull("value", Double.class)
-                .bind("observedAt", OffsetDateTime.ofInstant(r.observedAt(), ZoneOffset.UTC))
-                .bind("ingestedAt", OffsetDateTime.ofInstant(r.ingestedAt(), ZoneOffset.UTC))
-                .bind("source", r.source())
-                .bind("schemaVersion", r.schemaVersion())
-                .bind("qualityStatus", r.quality().status().name())
-                .fetch().one()
-                .map(row -> {
-                    if (r.value() != null) {
-                        // re-bind with actual value — workaround: use separate bind
-                        return true;
-                    }
-                    return true;
-                })
+        var observedAt = OffsetDateTime.ofInstant(r.observedAt(), ZoneOffset.UTC);
+        var ingestedAt = OffsetDateTime.ofInstant(r.ingestedAt(), ZoneOffset.UTC);
+        var spec = databaseClient.sql(
+                "INSERT INTO sensor_reading " +
+                "(sensor_id, location, latitude, longitude, metric, unit, value, " +
+                " observed_at, ingested_at, source, schema_version, quality_status) " +
+                "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) " +
+                "ON CONFLICT (sensor_id, observed_at) DO NOTHING " +
+                "RETURNING id")
+                .bind(0, r.sensorId().toString())
+                .bind(1, r.location())
+                .bind(2, 0.0)
+                .bind(3, 0.0)
+                .bind(4, r.metric().name())
+                .bind(5, r.unit())
+                .bind(7, observedAt)
+                .bind(8, ingestedAt)
+                .bind(9, r.source())
+                .bind(10, r.schemaVersion())
+                .bind(11, r.quality().status().name());
+
+        if (r.value() != null) {
+            spec = spec.bind(6, r.value());
+        } else {
+            spec = spec.bindNull(6, Double.class);
+        }
+
+        return spec.fetch().one()
+                .map(row -> true)
                 .defaultIfEmpty(false);
     }
 
     private Mono<Void> insertFlags(SensorReading r) {
         if (r.quality().flags().isEmpty()) return Mono.empty();
-        return databaseClient.sql("""
-                INSERT INTO reading_flag (reading_id, observed_at, flag)
-                SELECT id, observed_at, :flag FROM sensor_reading
-                WHERE sensor_id = :sensorId AND observed_at = :observedAt
-                ON CONFLICT DO NOTHING
-                """)
-                .bind("sensorId", r.sensorId().toString())
-                .bind("observedAt", OffsetDateTime.ofInstant(r.observedAt(), ZoneOffset.UTC))
-                .bind("flag", r.quality().flags().iterator().next().name())
+        var observedAt = OffsetDateTime.ofInstant(r.observedAt(), ZoneOffset.UTC);
+        return databaseClient.sql(
+                "INSERT INTO reading_flag (reading_id, observed_at, flag) " +
+                "SELECT id, observed_at, $1 FROM sensor_reading " +
+                "WHERE sensor_id = $2 AND observed_at = $3 " +
+                "ON CONFLICT DO NOTHING")
+                .bind(0, r.quality().flags().iterator().next().name())
+                .bind(1, r.sensorId().toString())
+                .bind(2, observedAt)
                 .fetch().rowsUpdated()
                 .then();
     }

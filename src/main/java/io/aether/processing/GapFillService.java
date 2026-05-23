@@ -47,10 +47,10 @@ public class GapFillService {
 
         return databaseClient.sql(
                 "SELECT observed_at, value FROM sensor_reading " +
-                "WHERE sensor_id = :sensorId AND observed_at >= :since " +
+                "WHERE sensor_id = $1 AND observed_at >= $2 " +
                 "ORDER BY observed_at ASC")
-                .bind("sensorId", sensorId)
-                .bind("since", since)
+                .bind(0, sensorId)
+                .bind(1, since)
                 .fetch().all()
                 .collectList()
                 .flatMap(rows -> insertMissingSlots(rows, sensorId, location, metric));
@@ -74,23 +74,22 @@ public class GapFillService {
                             "(sensor_id, location, latitude, longitude, metric, unit, value, " +
                             " observed_at, ingested_at, source, schema_version, quality_status) " +
                             "VALUES " +
-                            "(:sensorId, :location, 0, 0, :metric, :unit, :value, " +
-                            " :observedAt, now(), 'gap-fill', 1, 'SUSPECT') " +
+                            "($1, $2, 0, 0, $3, $4, $5, $6, now(), 'gap-fill', 1, 'SUSPECT') " +
                             "ON CONFLICT (sensor_id, observed_at) DO NOTHING " +
                             "RETURNING id")
-                            .bind("sensorId", sensorId)
-                            .bind("location", location.name())
-                            .bind("metric", metric.name())
-                            .bind("unit", metric.unit())
-                            .bindNull("value", Double.class)
-                            .bind("observedAt", missingSlot)
+                            .bind(0, sensorId)
+                            .bind(1, location.name())
+                            .bind(2, metric.name())
+                            .bind(3, metric.unit())
+                            .bindNull(4, Double.class)
+                            .bind(5, missingSlot)
                             .fetch().one()
                             .flatMap(row -> databaseClient.sql(
                                     "INSERT INTO reading_flag (reading_id, observed_at, flag) " +
-                                    "VALUES (:id, :observedAt, 'IMPUTED') " +
+                                    "VALUES ($1, $2, 'IMPUTED') " +
                                     "ON CONFLICT DO NOTHING")
-                                    .bind("id", row.get("id"))
-                                    .bind("observedAt", missingSlot)
+                                    .bind(0, row.get("id"))
+                                    .bind(1, missingSlot)
                                     .fetch().rowsUpdated())
                             .defaultIfEmpty(0L);
                 })
