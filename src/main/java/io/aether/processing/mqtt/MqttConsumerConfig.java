@@ -11,21 +11,15 @@ import org.springframework.integration.mqtt.inbound.Mqttv5PahoMessageDrivenChann
 class MqttConsumerConfig {
 
     @Bean
-    Mqttv5PahoMessageDrivenChannelAdapter mqttInboundAdapter(
-            @Value("${aether.mqtt.broker-url}") String brokerUrl) {
+    IntegrationFlow mqttInboundFlow(
+            @Value("${aether.mqtt.broker-url}") String brokerUrl,
+            MqttReadingConsumer consumer) {
         var options = new MqttConnectionOptions();
         options.setServerURIs(new String[]{brokerUrl});
         options.setAutomaticReconnect(true);
         var adapter = new Mqttv5PahoMessageDrivenChannelAdapter(options, "aether-01-sub", "sensors/#");
         adapter.setQos(1);
-        return adapter;
-    }
-
-    @Bean
-    IntegrationFlow mqttInboundFlow(
-            Mqttv5PahoMessageDrivenChannelAdapter mqttInboundAdapter,
-            MqttReadingConsumer consumer) {
-        return IntegrationFlow.from(mqttInboundAdapter)
+        return IntegrationFlow.from(adapter)
                 .handle(consumer)
                 .get();
     }
