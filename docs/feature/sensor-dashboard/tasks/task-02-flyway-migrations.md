@@ -5,7 +5,7 @@
 
 ## Description
 
-Write all five Flyway SQL migrations that establish the complete database schema. Migrations run automatically on aerator startup via the `FlywayConfig` JDBC DataSource (task-01). The TimescaleDB hypertable migration is order-sensitive: the extension must exist before the hypertable DDL.
+Write all five Flyway SQL migrations that establish the complete database schema. Migrations run automatically on aether startup via the `FlywayConfig` JDBC DataSource (task-01). The TimescaleDB hypertable migration is order-sensitive: the extension must exist before the hypertable DDL.
 
 ## Acceptance Criteria
 

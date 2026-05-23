@@ -18,7 +18,7 @@ class MqttIntegrationConfig {
         var options = new MqttConnectionOptions();
         options.setServerURIs(new String[]{brokerUrl});
         options.setAutomaticReconnect(true);
-        var handler = new Mqttv5PahoMessageHandler(options, "aerator-01-pub");
+        var handler = new Mqttv5PahoMessageHandler(options, "aether-01-pub");
         handler.setDefaultQos(1);
         handler.setAsync(true);
         return handler;

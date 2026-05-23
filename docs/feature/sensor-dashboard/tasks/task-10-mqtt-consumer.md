@@ -13,7 +13,7 @@ Wire the Paho MQTT v5 inbound adapter (`Mqttv5PahoMessageDrivenChannelAdapter`) 
 - [ ] Incoming JSON deserialized to `SensorReading` via Jackson; deserialization failure logs error and skips (does not crash)
 - [ ] `schemaVersion` check: if `schemaVersion > 1` (unknown future major), log a warning and drop the message
 - [ ] Successfully deserialized reading emitted to `Sinks.Many<SensorReading>` with `tryEmitNext`
-- [ ] Uses a distinct client ID (`aerator-01-sub`) to avoid conflict with the publisher client
+- [ ] Uses a distinct client ID (`aether-01-sub`) to avoid conflict with the publisher client
 - [ ] `MqttReadingConsumerTest`: publish a test JSON message to the inbound channel; verify it lands in the `Sinks.Many`
 
 ## Dependencies
@@ -41,7 +41,7 @@ Wire the Paho MQTT v5 inbound adapter (`Mqttv5PahoMessageDrivenChannelAdapter`) 
       options.setServerURIs(new String[]{brokerUrl});
       options.setAutomaticReconnect(true);
       var adapter = new Mqttv5PahoMessageDrivenChannelAdapter(
-          options, "aerator-01-sub", "sensors/#");
+          options, "aether-01-sub", "sensors/#");
       adapter.setQos(1);
       adapter.setOutputChannelName("mqttInboundChannel");
       return adapter;

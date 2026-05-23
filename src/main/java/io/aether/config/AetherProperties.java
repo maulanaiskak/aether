@@ -51,7 +51,7 @@ public class AetherProperties {
 
     public static class MqttConfig {
         private String brokerUrl = "tcp://localhost:1883";
-        private String clientId = "aerator-01";
+        private String clientId = "aether-01";
         private int qos = 1;
         public String getBrokerUrl() { return brokerUrl; }
         public void setBrokerUrl(String brokerUrl) { this.brokerUrl = brokerUrl; }

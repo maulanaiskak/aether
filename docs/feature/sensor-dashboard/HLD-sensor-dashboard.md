@@ -63,7 +63,7 @@ This is a portfolio / showcase project demonstrating end-to-end backend engineer
 
 | Application              | Impact Type | Description                                                        |
 |--------------------------|-------------|--------------------------------------------------------------------|
-| **aerator** (Spring Boot) | New         | Modular monolith: ingestion, processing, anomaly, insight, API     |
+| **aether** (Spring Boot) | New         | Modular monolith: ingestion, processing, anomaly, insight, API     |
 | **ml-service** (Python)  | New         | FastAPI + LightGBM/Prophet PM2.5 forecasting sidecar               |
 | **frontend** (React/Vite)| New         | TypeScript dashboard: charts, AQI gauge, forecast overlay, insights|
 | **mosquitto** (broker)   | New (infra)  | Eclipse Mosquitto 2.x MQTT broker via Docker                       |
@@ -116,7 +116,7 @@ The following changes must be applied to the skeleton **before** any feature wor
 
 | # | Action | Reason |
 |---|--------|--------|
-| P-01 | Rename base package `io.trade.order.aerator` → `io.aether` in all source files, `build.gradle` group, and `settings.gradle` | HLD module structure is rooted at `io.aether`; implementing under the old name means a high-friction rename mid-project |
+| P-01 | Rename base package `io.trade.order.aether` → `io.aether` in all source files, `build.gradle` group, and `settings.gradle` | HLD module structure is rooted at `io.aether`; implementing under the old name means a high-friction rename mid-project |
 | P-02 | Remove `spring-boot-starter-webmvc` (already done in `build.gradle` by this HLD) | WebMVC and WebFlux on the same classpath silently forces the servlet dispatcher, breaking Netty, R2DBC, and reactive routing |
 | P-03 | Add all dependencies listed in §Build Configuration (already applied to `build.gradle`) | Flyway, R2DBC, Spring Integration MQTT, Resilience4j, Actuator |
 
@@ -126,7 +126,7 @@ The following changes must be applied to the skeleton **before** any feature wor
 
 ### Overview
 
-The aerator backend is a **Spring Boot 4.0 modular monolith** backed by **Project Reactor / WebFlux** throughout. Logical boundaries are enforced by Java package dependencies on a shared `domain` module — no inter-package circular imports. The one genuinely separate runtime process is the Python ML sidecar, called over HTTP by the aerator's forecast orchestrator.
+The aether backend is a **Spring Boot 4.0 modular monolith** backed by **Project Reactor / WebFlux** throughout. Logical boundaries are enforced by Java package dependencies on a shared `domain` module — no inter-package circular imports. The one genuinely separate runtime process is the Python ML sidecar, called over HTTP by the aether's forecast orchestrator.
 
 ### Stack Summary
 
@@ -142,7 +142,7 @@ The aerator backend is a **Spring Boot 4.0 modular monolith** backed by **Projec
 | ML service    | **Python 3.12 + FastAPI + LightGBM**          | Separate Docker container; Spring calls via WebClient |
 | Frontend      | **React 19 + Vite 6 + TypeScript**            | TanStack Query, SSE (`EventSource`), Recharts      |
 | Build         | **Gradle 9** + `spotlessApply`                | GraalVM native plugin already configured           |
-| Container     | **Docker Compose v2**                         | All services: mosquitto, postgres, aerator, ml, fe |
+| Container     | **Docker Compose v2**                         | All services: mosquitto, postgres, aether, ml, fe |
 | CI            | **GitHub Actions**                            | build + test + lint + docker build                 |
 | Observability | **Micrometer + Prometheus + Grafana**         | Optional but wired (nice-to-have)                  |
 
@@ -459,7 +459,7 @@ flowchart TB
         A2["Open-Meteo AQ API\nair-quality-api.open-meteo.com"]
     end
 
-    subgraph "2. aerator — Spring Boot 4 / WebFlux"
+    subgraph "2. aether — Spring Boot 4 / WebFlux"
         B1["ingestion\nOpenMeteoScheduler\nWebClient + Resilience4j"]
         B2["processing\nMQTT subscriber\nValidation · Smooth · Gap-fill"]
         B3["anomaly\nZ-score · EWMA · IQR"]
@@ -503,7 +503,7 @@ flowchart TB
 
 **Architecture Explanation:**
 1. **Data Sources:** Two separate Open-Meteo API hosts (forecast + air-quality). Key-less, CC BY 4.0.
-2. **aerator (modular monolith):** All logical modules in one JVM; `domain` is the shared kernel. Modules communicate via in-process reactive streams, not HTTP or Kafka. Only `api` knows about all other modules.
+2. **aether (modular monolith):** All logical modules in one JVM; `domain` is the shared kernel. Modules communicate via in-process reactive streams, not HTTP or Kafka. Only `api` knows about all other modules.
 3. **Infrastructure:** Mosquitto provides the MQTT bus; TimescaleDB provides time-series storage with hypertable partitioning on `observed_at`.
 4. **ML Sidecar:** Separate Python process — the only genuine service boundary. Called over HTTP by `forecast` module; stateless at request time (model loaded at startup).
 5. **Client:** React SPA served by nginx in the compose stack; uses REST for historical queries and Server-Sent Events (`EventSource`) for live push.
@@ -671,7 +671,7 @@ aether:
 
 - ONNX inference inside native is **not** used (Option B was chosen). Python ML sidecar runs as a standard JVM-external process — no GraalVM concern there.
 - Mosquitto (C) and PostgreSQL are never compiled to native — they run as standard Docker images.
-- If any dynamic proxy in Spring Integration MQTT causes native compilation failure, fallback: ship the aerator service as a JVM image and keep native as a documented future step.
+- If any dynamic proxy in Spring Integration MQTT causes native compilation failure, fallback: ship the aether service as a JVM image and keep native as a documented future step.
 
 ---
 
@@ -741,7 +741,7 @@ services:
       interval: 5s
       retries: 10
 
-  aerator:
+  aether:
     build: .
     depends_on:
       mosquitto: { condition: service_healthy }
@@ -765,7 +765,7 @@ services:
     build: ./frontend
     ports: ["80:80"]
     depends_on:
-      aerator: { condition: service_healthy }
+      aether: { condition: service_healthy }
 ```
 
 ### Flyway Dual-Datasource Wiring
@@ -794,7 +794,7 @@ class FlywayConfig {
 
 - [ ] Docker Engine 24+ + Compose v2
 - [ ] `.env` file with `POSTGRES_PASSWORD` (defaults work for local)
-- [ ] `./gradlew bootBuildImage` (or `nativeCompile`) for aerator image
+- [ ] `./gradlew bootBuildImage` (or `nativeCompile`) for aether image
 - [ ] `cd ml-service && pip install -r requirements.txt && python train.py` (or bundled in image)
 
 ### Deployment Phases
@@ -802,7 +802,7 @@ class FlywayConfig {
 | Phase | Description                                             | Rollback Point |
 |-------|---------------------------------------------------------|----------------|
 | 1     | `docker compose up -d mosquitto postgres`               | Yes            |
-| 2     | `docker compose up -d aerator` (Flyway migrations run)  | Yes            |
+| 2     | `docker compose up -d aether` (Flyway migrations run)  | Yes            |
 | 3     | `docker compose up -d ml-service`                       | Yes            |
 | 4     | `docker compose up -d frontend`                         | Yes            |
 
@@ -822,7 +822,7 @@ aether:
       lon: 107.6191
   mqtt:
     broker-url: tcp://localhost:1883
-    client-id: aerator-01   # stable, not random — random client IDs break QoS 1 session resumption
+    client-id: aether-01   # stable, not random — random client IDs break QoS 1 session resumption
     qos: 1
   ingestion:
     poll-cron: "0 0 * * * *"    # top of every hour

@@ -10,7 +10,10 @@
       "Bash(git rm *)",
       "Bash(git commit -m ' *)",
       "Bash(./gradlew compileTestJava)",
-      "Bash(grep -v \"^$\")"
+      "Bash(grep -v \"^$\")",
+      "Bash(./gradlew compileJava compileTestJava --no-daemon)",
+      "Bash(git commit *)",
+      "Bash(./gradlew compileTestJava --no-daemon)"
     ]
   }
 }

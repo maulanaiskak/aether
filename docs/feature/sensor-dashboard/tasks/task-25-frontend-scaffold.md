@@ -16,7 +16,7 @@ Scaffold the React + Vite + TypeScript frontend project. Configure TanStack Quer
 - [ ] TanStack Query `QueryClient` configured with `staleTime: 30_000`
 - [ ] TypeScript types for `SensorReadingDto`, `AnomalyEventDto`, `ForecastPointDto`, `InsightResponseDto` matching backend DTO shapes
 - [ ] `npm run build` succeeds with no TypeScript errors
-- [ ] `frontend/Dockerfile`: nginx serving the Vite build output; `nginx.conf` that proxies `/api` and `/stream` to `aerator:8080`
+- [ ] `frontend/Dockerfile`: nginx serving the Vite build output; `nginx.conf` that proxies `/api` and `/stream` to `aether:8080`
 
 ## Dependencies
 
@@ -34,14 +34,14 @@ Scaffold the React + Vite + TypeScript frontend project. Configure TanStack Quer
 | `frontend/src/types/api.ts` | Create | TypeScript DTO types |
 | `frontend/src/api/client.ts` | Create | TanStack Query hooks (useReadings, useForecast, useAnomalies) |
 | `frontend/Dockerfile` | Create | Multi-stage: node build → nginx serve |
-| `frontend/nginx.conf` | Create | Proxy /api and /stream to aerator |
+| `frontend/nginx.conf` | Create | Proxy /api and /stream to aether |
 
 ## Implementation Hints
 
 - **nginx.conf proxy for SSE (critical):**
   ```nginx
   location /stream/ {
-      proxy_pass http://aerator:8080;
+      proxy_pass http://aether:8080;
       proxy_http_version 1.1;
       proxy_set_header Connection '';      # keep-alive, not upgrade
       proxy_buffering off;                 # disable buffering — SSE requires immediate flush

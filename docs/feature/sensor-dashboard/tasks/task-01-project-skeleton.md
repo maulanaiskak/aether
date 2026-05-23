@@ -9,7 +9,7 @@ Set up the complete project skeleton before any feature code is written. This in
 
 ## Acceptance Criteria
 
-- [ ] Base package renamed from `io.trade.order.aerator` to `io.aether` in all source files, `build.gradle` `group`, and `settings.gradle`
+- [ ] Base package renamed from `io.trade.order.aether` to `io.aether` in all source files, `build.gradle` `group`, and `settings.gradle`
 - [ ] `build.gradle` contains exactly the dependencies listed in HLD §Prerequisites: `spring-boot-starter-webflux`, `spring-boot-starter-data-r2dbc`, `r2dbc-postgresql`, `flyway-core`, `postgresql` (JDBC), `spring-integration-mqtt`, `org.eclipse.paho.mqttv5.client:1.2.5`, `resilience4j-reactor`, `resilience4j-circuitbreaker`, `spring-boot-starter-actuator`, `micrometer-registry-prometheus`
 - [ ] `spring-boot-starter-webmvc` is absent from all dependency configurations
 - [ ] Module package directories exist: `io.aether.domain`, `io.aether.ingestion`, `io.aether.processing`, `io.aether.anomaly`, `io.aether.forecast`, `io.aether.insight`, `io.aether.api`
@@ -31,7 +31,7 @@ Set up the complete project skeleton before any feature code is written. This in
 | `build.gradle` | Modify | Update group, replace deps (already partially done) |
 | `settings.gradle` | Modify | Rename `rootProject.name` to `aether` |
 | `src/main/java/io/aether/AetherApplication.java` | Create | Renamed main class |
-| `src/main/java/io/trade/order/aerator/AeratorApplication.java` | Delete | Old main class |
+| `src/main/java/io/trade/order/aether/AeratorApplication.java` | Delete | Old main class |
 | `src/main/resources/application.yml` | Create | Full config stubs |
 | `src/main/resources/application.properties` | Delete | Replace with YAML |
 | `src/main/java/io/aether/config/FlywayConfig.java` | Create | `@FlywayDataSource` JDBC bean |
@@ -73,7 +73,7 @@ Set up the complete project skeleton before any feature code is written. This in
       - { name: bandung,  lat: -6.9175, lon: 107.6191 }
     mqtt:
       broker-url: tcp://localhost:1883
-      client-id: aerator-01
+      client-id: aether-01
       qos: 1
     ingestion:
       poll-cron: "0 0 * * * *"

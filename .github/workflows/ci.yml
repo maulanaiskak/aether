@@ -23,7 +23,7 @@ jobs:
         run: ./gradlew build test --no-daemon
 
       - name: Build backend image
-        run: docker build -t aerator .
+        run: docker build -t aether .
 
       - name: Build ml-service image
         run: docker build -t ml-service ./ml-service

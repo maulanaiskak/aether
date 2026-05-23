@@ -54,7 +54,7 @@ Final polish task: validate the full compose stack works end-to-end on a clean m
         - uses: actions/setup-java@v4
           with: { java-version: '21', distribution: 'temurin' }
         - run: ./gradlew build test --no-daemon
-        - run: docker build -t aerator .
+        - run: docker build -t aether .
         - run: docker build -t ml-service ./ml-service
         - run: docker build -t frontend ./frontend
   ```

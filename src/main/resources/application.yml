@@ -26,7 +26,7 @@ aether:
       lon: 107.6191
   mqtt:
     broker-url: tcp://localhost:1883
-    client-id: aerator-01
+    client-id: aether-01
     qos: 1
   ingestion:
     poll-cron: "0 0 * * * *"

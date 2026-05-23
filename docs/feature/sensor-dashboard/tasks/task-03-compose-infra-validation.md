@@ -9,10 +9,10 @@ Create the full `docker-compose.yml` and supporting infrastructure config files 
 
 ## Acceptance Criteria
 
-- [ ] `docker-compose.yml` defines: `mosquitto`, `postgres`, `aerator`, `ml-service` (stub), `frontend` (stub) with correct health checks and `condition: service_healthy` dependencies
+- [ ] `docker-compose.yml` defines: `mosquitto`, `postgres`, `aether`, `ml-service` (stub), `frontend` (stub) with correct health checks and `condition: service_healthy` dependencies
 - [ ] `infra/mosquitto/mosquitto.conf` created (anonymous mode, persistence off for dev)
 - [ ] `docker compose up` → all services healthy within 3 minutes on a fresh machine
-- [ ] `./actuator/health` returns `{"status":"UP"}` from the aerator container
+- [ ] `./actuator/health` returns `{"status":"UP"}` from the aether container
 - [ ] Flyway migrations applied: `flyway_schema_history` table shows V1–V6 as SUCCESS
 - [ ] Aerator publishes a heartbeat message to `aether/system/heartbeat` every 30 s (observable via `mosquitto_sub`)
 - [ ] `.env.example` documents `POSTGRES_PASSWORD`
@@ -50,7 +50,7 @@ Create the full `docker-compose.yml` and supporting infrastructure config files 
         test: ["CMD", "pg_isready", "-U", "aether"]
         interval: 5s
         retries: 10
-    aerator:
+    aether:
       depends_on:
         mosquitto: { condition: service_healthy }
         postgres:  { condition: service_healthy }
@@ -75,7 +75,7 @@ Create the full `docker-compose.yml` and supporting infrastructure config files 
   COPY --from=build /app/build/libs/*.jar app.jar
   ENTRYPOINT ["java","-jar","/app.jar"]
   ```
-- **Key consideration:** The `aerator` healthcheck uses `curl`. Ensure `curl` is present in the JRE base image or use `wget` instead. Eclipse Temurin JRE images include neither by default — add `RUN apt-get install -y curl` in the final stage or use the actuator HTTP check via a Java one-liner.
+- **Key consideration:** The `aether` healthcheck uses `curl`. Ensure `curl` is present in the JRE base image or use `wget` instead. Eclipse Temurin JRE images include neither by default — add `RUN apt-get install -y curl` in the final stage or use the actuator HTTP check via a Java one-liner.
 
 ---
 

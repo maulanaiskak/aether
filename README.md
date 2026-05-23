@@ -50,7 +50,7 @@ Open-Meteo APIs ──► OpenMeteoScheduler ──► MQTT (Mosquitto)
 
 ```bash
 git clone <repo-url>
-cd aerator
+cd aether
 cp .env.example .env
 docker compose up
 ```

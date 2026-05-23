@@ -18,7 +18,7 @@ class AlertMqttConfig {
         var options = new MqttConnectionOptions();
         options.setServerURIs(new String[]{brokerUrl});
         options.setAutomaticReconnect(true);
-        var handler = new Mqttv5PahoMessageHandler(options, "aerator-01-alert");
+        var handler = new Mqttv5PahoMessageHandler(options, "aether-01-alert");
         handler.setDefaultQos(1);
         handler.setAsync(true);
         return handler;

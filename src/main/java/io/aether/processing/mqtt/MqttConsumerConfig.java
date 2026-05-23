@@ -16,7 +16,7 @@ class MqttConsumerConfig {
         var options = new MqttConnectionOptions();
         options.setServerURIs(new String[]{brokerUrl});
         options.setAutomaticReconnect(true);
-        var adapter = new Mqttv5PahoMessageDrivenChannelAdapter(options, "aerator-01-sub", "sensors/#");
+        var adapter = new Mqttv5PahoMessageDrivenChannelAdapter(options, "aether-01-sub", "sensors/#");
         adapter.setQos(1);
         return adapter;
     }

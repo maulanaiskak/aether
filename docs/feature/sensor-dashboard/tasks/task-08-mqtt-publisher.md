@@ -11,7 +11,7 @@ Wire the Paho MQTT v5 outbound adapter as a Spring Integration `IntegrationFlow`
 
 - [ ] `MqttPublisher` bean in `io.aether.ingestion` wraps `Mqttv5PahoMessageHandler` for `sensors/#` outbound
 - [ ] `AlertPublisher` bean in `io.aether.api` wraps a second `Mqttv5PahoMessageHandler` for `alerts/#` outbound
-- [ ] Both use `client-id` from config (`aerator-01`); they must use different client IDs to avoid broker conflict — append `-pub` and `-alert` suffixes respectively
+- [ ] Both use `client-id` from config (`aether-01`); they must use different client IDs to avoid broker conflict — append `-pub` and `-alert` suffixes respectively
 - [ ] QoS 1 for all publishes
 - [ ] Payload is Jackson-serialized `SensorReading` (or `AnomalyEvent`) JSON
 - [ ] `MqttPublisherTest` verifies that `publish(SensorReading)` dispatches a message to the integration channel (using in-memory channel, no Mosquitto container required)
@@ -42,7 +42,7 @@ Wire the Paho MQTT v5 outbound adapter as a Spring Integration `IntegrationFlow`
       var options = new MqttConnectionOptions();
       options.setServerURIs(new String[]{brokerUrl});
       options.setAutomaticReconnect(true);
-      var handler = new Mqttv5PahoMessageHandler(options, "aerator-01-pub");
+      var handler = new Mqttv5PahoMessageHandler(options, "aether-01-pub");
       handler.setDefaultQos(1);
       handler.setAsync(true);
       return handler;
