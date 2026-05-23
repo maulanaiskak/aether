@@ -45,11 +45,10 @@ public class GapFillService {
         var sensorId = "open-meteo:" + location.name() + ":" + metric.name().toLowerCase();
         var since = OffsetDateTime.ofInstant(Instant.now().minus(2, ChronoUnit.HOURS), ZoneOffset.UTC);
 
-        return databaseClient.sql("""
-                SELECT observed_at, value FROM sensor_reading
-                WHERE sensor_id = :sensorId AND observed_at >= :since
-                ORDER BY observed_at ASC
-                """)
+        return databaseClient.sql(
+                "SELECT observed_at, value FROM sensor_reading " +
+                "WHERE sensor_id = :sensorId AND observed_at >= :since " +
+                "ORDER BY observed_at ASC")
                 .bind("sensorId", sensorId)
                 .bind("since", since)
                 .fetch().all()
@@ -70,16 +69,15 @@ public class GapFillService {
                     Double imputed = (prevVal != null && nextVal != null) ? (prevVal + nextVal) / 2.0 : null;
                     var missingSlot = prevTime.plusHours(1).truncatedTo(ChronoUnit.HOURS);
 
-                    return databaseClient.sql("""
-                            INSERT INTO sensor_reading
-                                (sensor_id, location, latitude, longitude, metric, unit, value,
-                                 observed_at, ingested_at, source, schema_version, quality_status)
-                            VALUES
-                                (:sensorId, :location, 0, 0, :metric, :unit, :value,
-                                 :observedAt, now(), 'gap-fill', 1, 'SUSPECT')
-                            ON CONFLICT (sensor_id, observed_at) DO NOTHING
-                            RETURNING id
-                            """)
+                    return databaseClient.sql(
+                            "INSERT INTO sensor_reading " +
+                            "(sensor_id, location, latitude, longitude, metric, unit, value, " +
+                            " observed_at, ingested_at, source, schema_version, quality_status) " +
+                            "VALUES " +
+                            "(:sensorId, :location, 0, 0, :metric, :unit, :value, " +
+                            " :observedAt, now(), 'gap-fill', 1, 'SUSPECT') " +
+                            "ON CONFLICT (sensor_id, observed_at) DO NOTHING " +
+                            "RETURNING id")
                             .bind("sensorId", sensorId)
                             .bind("location", location.name())
                             .bind("metric", metric.name())
@@ -87,11 +85,10 @@ public class GapFillService {
                             .bindNull("value", Double.class)
                             .bind("observedAt", missingSlot)
                             .fetch().one()
-                            .flatMap(row -> databaseClient.sql("""
-                                    INSERT INTO reading_flag (reading_id, observed_at, flag)
-                                    VALUES (:id, :observedAt, 'IMPUTED')
-                                    ON CONFLICT DO NOTHING
-                                    """)
+                            .flatMap(row -> databaseClient.sql(
+                                    "INSERT INTO reading_flag (reading_id, observed_at, flag) " +
+                                    "VALUES (:id, :observedAt, 'IMPUTED') " +
+                                    "ON CONFLICT DO NOTHING")
                                     .bind("id", row.get("id"))
                                     .bind("observedAt", missingSlot)
                                     .fetch().rowsUpdated())
