@@ -2,6 +2,7 @@ package io.aether.processing;
 
 import io.aether.config.AetherProperties;
 import io.aether.domain.*;
+import io.aether.processing.repository.SensorReadingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -15,6 +16,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class GapFillService {
@@ -22,10 +24,14 @@ public class GapFillService {
     private static final Logger log = LoggerFactory.getLogger(GapFillService.class);
 
     private final List<Location> locations;
+    private final SensorReadingRepository repository;
     private final DatabaseClient databaseClient;
 
-    public GapFillService(AetherProperties properties, DatabaseClient databaseClient) {
+    public GapFillService(AetherProperties properties,
+                          SensorReadingRepository repository,
+                          DatabaseClient databaseClient) {
         this.locations = properties.getLocationList();
+        this.repository = repository;
         this.databaseClient = databaseClient;
     }
 
@@ -45,49 +51,39 @@ public class GapFillService {
         var sensorId = "open-meteo:" + location.name() + ":" + metric.name().toLowerCase();
         var since = OffsetDateTime.ofInstant(Instant.now().minus(2, ChronoUnit.HOURS), ZoneOffset.UTC);
 
-        return databaseClient.sql(
-                "SELECT observed_at, value FROM sensor_reading " +
-                "WHERE sensor_id = $1 AND observed_at >= $2 " +
-                "ORDER BY observed_at ASC")
-                .bind(0, sensorId)
-                .bind(1, since)
-                .fetch().all()
+        return repository.findBySensorIdAndObservedAtGreaterThanEqualOrderByObservedAtAsc(sensorId, since)
                 .collectList()
                 .flatMap(rows -> insertMissingSlots(rows, sensorId, location, metric));
     }
 
-    private Mono<Long> insertMissingSlots(List<java.util.Map<String, Object>> rows, String sensorId, Location location, Metric metric) {
+    private Mono<Long> insertMissingSlots(
+            List<io.aether.processing.entity.SensorReadingEntity> rows,
+            String sensorId, Location location, Metric metric) {
         if (rows.size() < 2) return Mono.just(0L);
         return Flux.range(0, rows.size() - 1)
                 .flatMap(i -> {
-                    var prevTime = (OffsetDateTime) rows.get(i).get("observed_at");
-                    var nextTime = (OffsetDateTime) rows.get(i + 1).get("observed_at");
+                    var prevTime = rows.get(i).observedAt();
+                    var nextTime = rows.get(i + 1).observedAt();
                     if (ChronoUnit.MINUTES.between(prevTime, nextTime) <= 90) return Mono.empty();
 
-                    var prevVal = (Double) rows.get(i).get("value");
-                    var nextVal = (Double) rows.get(i + 1).get("value");
-                    Double imputed = (prevVal != null && nextVal != null) ? (prevVal + nextVal) / 2.0 : null;
                     var missingSlot = prevTime.plusHours(1).truncatedTo(ChronoUnit.HOURS);
 
                     return databaseClient.sql(
                             "INSERT INTO sensor_reading " +
                             "(sensor_id, location, latitude, longitude, metric, unit, value, " +
                             " observed_at, ingested_at, source, schema_version, quality_status) " +
-                            "VALUES " +
-                            "($1, $2, 0, 0, $3, $4, $5, $6, now(), 'gap-fill', 1, 'SUSPECT') " +
+                            "VALUES ($1, $2, 0, 0, $3, $4, NULL, $5, now(), 'gap-fill', 1, 'SUSPECT') " +
                             "ON CONFLICT (sensor_id, observed_at) DO NOTHING " +
                             "RETURNING id")
                             .bind(0, sensorId)
                             .bind(1, location.name())
                             .bind(2, metric.name())
                             .bind(3, metric.unit())
-                            .bindNull(4, Double.class)
-                            .bind(5, missingSlot)
+                            .bind(4, missingSlot)
                             .fetch().one()
                             .flatMap(row -> databaseClient.sql(
                                     "INSERT INTO reading_flag (reading_id, observed_at, flag) " +
-                                    "VALUES ($1, $2, 'IMPUTED') " +
-                                    "ON CONFLICT DO NOTHING")
+                                    "VALUES ($1, $2, 'IMPUTED') ON CONFLICT DO NOTHING")
                                     .bind(0, row.get("id"))
                                     .bind(1, missingSlot)
                                     .fetch().rowsUpdated())

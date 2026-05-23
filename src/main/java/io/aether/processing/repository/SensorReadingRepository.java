@@ -15,4 +15,7 @@ public interface SensorReadingRepository extends ReactiveCrudRepository<SensorRe
 
     @Query("SELECT * FROM sensor_reading WHERE location = :location ORDER BY observed_at DESC LIMIT 1")
     Mono<SensorReadingEntity> findLatestByLocation(String location);
+
+    Flux<SensorReadingEntity> findBySensorIdAndObservedAtGreaterThanEqualOrderByObservedAtAsc(
+            String sensorId, OffsetDateTime since);
 }
