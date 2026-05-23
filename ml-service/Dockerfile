@@ -5,9 +5,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY train.py app.py ./
-COPY data/ data/
 
-# Pre-train model at build time
+# Pre-train model at build time (generates synthetic data if no fixture present)
 RUN python train.py
 
 EXPOSE 8000
