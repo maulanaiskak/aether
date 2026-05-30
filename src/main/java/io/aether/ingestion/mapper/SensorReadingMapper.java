@@ -22,8 +22,10 @@ public class SensorReadingMapper {
         var times = hourly.time();
         int size = times.size();
 
+        var now = Instant.now();
         for (int i = 0; i < size; i++) {
             var observedAt = parseTime(times.get(i));
+            if (observedAt.isAfter(now)) continue;
             result.add(reading(location, Metric.TEMPERATURE, safeGet(hourly.temperature2m(), i), observedAt));
             result.add(reading(location, Metric.HUMIDITY, safeGet(hourly.relativeHumidity2m(), i), observedAt));
             result.add(reading(location, Metric.WIND_SPEED, safeGet(hourly.windSpeed10m(), i), observedAt));
@@ -39,8 +41,10 @@ public class SensorReadingMapper {
         var times = hourly.time();
         int size = times.size();
 
+        var now = Instant.now();
         for (int i = 0; i < size; i++) {
             var observedAt = parseTime(times.get(i));
+            if (observedAt.isAfter(now)) continue;
             result.add(reading(location, Metric.PM2_5, safeGet(hourly.pm25(), i), observedAt));
             result.add(reading(location, Metric.PM10, safeGet(hourly.pm10(), i), observedAt));
             result.add(reading(location, Metric.O3, safeGet(hourly.ozone(), i), observedAt));

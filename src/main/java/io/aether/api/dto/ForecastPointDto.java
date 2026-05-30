@@ -1,5 +1,5 @@
 package io.aether.api.dto;
 
-import java.time.Instant;
 
-public record ForecastPointDto(Instant horizonAt, double predicted, double lowerBound, double upperBound) {}
+
+public record ForecastPointDto(String horizonAt, double predicted, double lowerBound, double upperBound) {}

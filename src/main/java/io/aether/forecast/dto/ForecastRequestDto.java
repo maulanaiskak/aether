@@ -6,5 +6,5 @@ public record ForecastRequestDto(
         String location,
         List<DataPoint> history
 ) {
-    public record DataPoint(String time, Double pm25) {}
+    public record DataPoint(String observedAt, Double value) {}
 }

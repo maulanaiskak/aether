@@ -1,7 +1,5 @@
 package io.aether.api.dto;
 
-import java.time.Instant;
-
 public record SensorReadingDto(
         String sensorId,
         String location,
@@ -9,6 +7,6 @@ public record SensorReadingDto(
         String unit,
         Double value,
         Double smoothedValue,
-        Instant observedAt,
+        String observedAt,
         String qualityStatus
 ) {}

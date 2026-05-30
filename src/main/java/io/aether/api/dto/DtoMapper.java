@@ -15,7 +15,7 @@ public class DtoMapper {
                 reading.unit(),
                 reading.value(),
                 null,
-                reading.observedAt(),
+                reading.observedAt().toString(),
                 reading.quality().status().name()
         );
     }
@@ -25,7 +25,7 @@ public class DtoMapper {
                 event.sensorId().toString(),
                 event.location(),
                 event.metric().name(),
-                event.observedAt(),
+                event.observedAt().toString(),
                 event.value(),
                 event.method(),
                 event.score()

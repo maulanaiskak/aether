@@ -33,7 +33,7 @@ public class ForecastHandler {
 
         return ServerResponse.ok().body(
                 forecastRepo.findByLocationAndMetricAndHorizonAtAfter(location, metric, after)
-                        .map(e -> new ForecastPointDto(e.horizonAt().toInstant(), e.predicted(), e.lowerBound(), e.upperBound())),
+                        .map(e -> new ForecastPointDto(e.horizonAt().toInstant().toString(), e.predicted(), e.lowerBound(), e.upperBound())),
                 ForecastPointDto.class);
     }
 
@@ -44,7 +44,7 @@ public class ForecastHandler {
 
         return ServerResponse.ok().body(
                 metricsRepo.findByLocationAndModel(location, model)
-                        .map(e -> new ForecastMetricsDto(e.location(), e.metric(), e.model(), e.mae(), e.rmse(), e.evaluatedAt().toInstant())),
+                        .map(e -> new ForecastMetricsDto(e.location(), e.metric(), e.model(), e.mae(), e.rmse(), e.evaluatedAt().toInstant().toString())),
                 ForecastMetricsDto.class);
     }
 }

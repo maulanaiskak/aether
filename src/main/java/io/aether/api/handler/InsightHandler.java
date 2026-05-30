@@ -37,15 +37,23 @@ public class InsightHandler {
     public Mono<ServerResponse> generateInsight(ServerRequest request) {
         return request.bodyToMono(InsightRequestDto.class)
                 .flatMap(req -> {
-                    var location = locationMap.get(req.location());
+                    var location = locationMap.get(req.location().toLowerCase());
                     if (location == null) {
-                        return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        return Mono.<InsightResponseDto>error(new ResponseStatusException(HttpStatus.BAD_REQUEST,
                                 "Unknown location: " + req.location()));
                     }
-                    return contextBuilder.build(location);
+                    return contextBuilder.build(location)
+                            .flatMap(insightProvider::generate)
+                            .map(i -> {
+                                var insight = new InsightResponseDto.InsightDto("summary", "INFO", "Analysis", i.summary());
+                                return new InsightResponseDto(
+                                        i.location(),
+                                        req.metric(),
+                                        i.provider(),
+                                        java.util.List.of(insight),
+                                        i.asOf().toString());
+                            });
                 })
-                .flatMap(insightProvider::generate)
-                .map(i -> new InsightResponseDto(i.location(), i.asOf(), i.summary(), i.provider()))
                 .flatMap(dto -> ServerResponse.ok().bodyValue(dto))
                 .onErrorResume(ResponseStatusException.class,
                         e -> ServerResponse.status(e.getStatusCode()).bodyValue(e.getReason()));

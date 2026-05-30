@@ -35,7 +35,10 @@ public class ReadingPersistenceHandler {
         var validated = validationPipeline.validate(raw);
         return upsert(validated)
                 .flatMap(inserted -> {
-                    if (inserted) return insertFlags(validated);
+                    if (inserted) return insertFlags(validated).onErrorResume(e -> {
+                        log.warn("Flag insert skipped for {}: {}", validated.sensorId(), e.getMessage());
+                        return Mono.empty();
+                    });
                     return Mono.empty();
                 })
                 .then(Mono.fromRunnable(() ->

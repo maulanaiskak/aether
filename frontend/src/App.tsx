@@ -20,7 +20,7 @@ export default function App() {
   const [isLive, setIsLive] = useState(false)
   const seenRef = useRef(new Set<string>())
 
-  const { data: readingsPage, isLoading: readingsLoading } = useReadings(location, undefined, 48)
+  const { data: readingsPage, isLoading: readingsLoading, isSuccess: readingsSuccess } = useReadings(location, undefined, 48)
   const { data: forecast } = useForecast(location)
   const { data: anomaliesPage } = useAnomalies(location)
   const insightMutation = useInsight()
@@ -34,6 +34,9 @@ export default function App() {
   }, [])
 
   useReadingStream(location, onReading)
+
+  const hasData = readingsSuccess && (readingsPage?.content?.length ?? 0) > 0
+  const live = isLive || hasData
 
   const allReadings = [
     ...(readingsPage?.content ?? []),
@@ -56,7 +59,7 @@ export default function App() {
           {LOCATIONS.map((loc) => (
             <button
               key={loc}
-              onClick={() => { setLocation(loc); setLiveReadings([]); seenRef.current.clear(); setIsLive(false) }}
+              onClick={() => { setLocation(loc); setLiveReadings([]); seenRef.current.clear(); setIsLive(false); insightMutation.reset() }}
               style={{
                 background: loc === location ? '#3b82f6' : 'transparent',
                 color: '#f1f5f9',
@@ -73,7 +76,7 @@ export default function App() {
           ))}
         </nav>
         <div style={{ marginLeft: 'auto' }}>
-          <LiveIndicator live={isLive} />
+          <LiveIndicator live={live} />
         </div>
       </header>
 

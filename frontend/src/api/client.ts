@@ -27,27 +27,30 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 }
 
 export function useReadings(location: string, metric?: string, limit = 48) {
-  const params = new URLSearchParams({ location, limit: String(limit) })
+  const loc = location.toLowerCase()
+  const params = new URLSearchParams({ location: loc, limit: String(limit) })
   if (metric) params.set('metric', metric)
   return useQuery<PageDto<SensorReadingDto>>({
-    queryKey: ['readings', location, metric, limit],
+    queryKey: ['readings', loc, metric, limit],
     queryFn: () => get(`/readings?${params}`),
     staleTime: 30_000,
   })
 }
 
 export function useForecast(location: string, metric = 'PM2_5') {
+  const loc = location.toLowerCase()
   return useQuery<ForecastResponseDto>({
-    queryKey: ['forecast', location, metric],
-    queryFn: () => get(`/forecast?location=${location}&metric=${metric}`),
+    queryKey: ['forecast', loc, metric],
+    queryFn: () => get(`/forecast?location=${loc}&metric=${metric}`),
     staleTime: 30_000,
   })
 }
 
 export function useAnomalies(location: string, limit = 20) {
+  const loc = location.toLowerCase()
   return useQuery<PageDto<AnomalyEventDto>>({
-    queryKey: ['anomalies', location, limit],
-    queryFn: () => get(`/anomalies?location=${location}&limit=${limit}`),
+    queryKey: ['anomalies', loc, limit],
+    queryFn: () => get(`/anomalies?location=${loc}&limit=${limit}`),
     staleTime: 30_000,
   })
 }

@@ -10,4 +10,8 @@ public interface AnomalyRepository extends ReactiveCrudRepository<AnomalyEntity,
 
     Flux<AnomalyEntity> findByLocationAndMetricAndObservedAtBetween(
             String location, String metric, OffsetDateTime from, OffsetDateTime to);
+
+    @org.springframework.data.r2dbc.repository.Query("SELECT * FROM anomaly WHERE location = :location AND observed_at BETWEEN :from AND :to ORDER BY observed_at DESC LIMIT :limit")
+    Flux<AnomalyEntity> findByLocationAndObservedAtBetween(
+            String location, OffsetDateTime from, OffsetDateTime to, int limit);
 }

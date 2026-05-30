@@ -1,6 +1,6 @@
 package io.aether.api.handler;
 
-import io.aether.api.dto.DtoMapper;
+import io.aether.api.dto.PageDto;
 import io.aether.api.dto.SensorReadingDto;
 import io.aether.processing.repository.SensorReadingRepository;
 import org.springframework.http.HttpStatus;
@@ -18,48 +18,42 @@ import java.time.ZoneOffset;
 public class ReadingsHandler {
 
     private final SensorReadingRepository repository;
-    private final DtoMapper mapper;
 
-    public ReadingsHandler(SensorReadingRepository repository, DtoMapper mapper) {
+    public ReadingsHandler(SensorReadingRepository repository) {
         this.repository = repository;
-        this.mapper = mapper;
     }
 
     public Mono<ServerResponse> queryReadings(ServerRequest request) {
         var location = request.queryParam("location")
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "location required"));
-        var metric = request.queryParam("metric")
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "metric required"));
-        var from = parseInstant(request.queryParam("from").orElse(null), Instant.now().minusSeconds(3600));
-        var to = parseInstant(request.queryParam("to").orElse(null), Instant.now());
+        var metric = request.queryParam("metric").orElse(null);
+        var limit = Integer.parseInt(request.queryParam("limit").orElse("48"));
+        var from = OffsetDateTime.ofInstant(Instant.now().minusSeconds(limit * 3600L), ZoneOffset.UTC);
+        var to = OffsetDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
 
-        return ServerResponse.ok().body(
-                repository.findByLocationAndMetricAndObservedAtBetween(location, metric,
-                        OffsetDateTime.ofInstant(from, ZoneOffset.UTC),
-                        OffsetDateTime.ofInstant(to, ZoneOffset.UTC))
-                        .map(e -> new SensorReadingDto(
-                                e.sensorId(), e.location(), e.metric(), e.unit(),
-                                e.value(), e.smoothedValue(),
-                                e.observedAt().toInstant(), e.qualityStatus())),
-                SensorReadingDto.class);
+        var rows = metric != null
+                ? repository.findByLocationAndMetricAndObservedAtBetween(location, metric, from, to)
+                : repository.findByLocationAndObservedAtBetween(location, from, to, limit);
+
+        return rows.map(this::toDto)
+                .collectList()
+                .flatMap(list -> ServerResponse.ok().bodyValue(new PageDto<>(list, list.size())));
     }
 
     public Mono<ServerResponse> latestReadings(ServerRequest request) {
         var location = request.queryParam("location")
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "location required"));
         return repository.findLatestByLocation(location)
-                .map(e -> new SensorReadingDto(e.sensorId(), e.location(), e.metric(), e.unit(),
-                        e.value(), e.smoothedValue(), e.observedAt().toInstant(), e.qualityStatus()))
-                .flatMap(dto -> ServerResponse.ok().bodyValue(dto))
-                .switchIfEmpty(ServerResponse.notFound().build());
+                .map(e -> java.util.List.of(toDto(e)))
+                .flatMap(list -> ServerResponse.ok().bodyValue(list))
+                .switchIfEmpty(ServerResponse.ok().bodyValue(java.util.List.of()));
     }
 
-    private Instant parseInstant(String value, Instant fallback) {
-        if (value == null) return fallback;
-        try {
-            return Instant.parse(value);
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid timestamp: " + value);
-        }
+    private SensorReadingDto toDto(io.aether.processing.entity.SensorReadingEntity e) {
+        return new SensorReadingDto(
+                e.sensorId(), e.location(), e.metric(), e.unit(),
+                e.value(), e.smoothedValue(),
+                e.observedAt().toInstant().toString(),
+                e.qualityStatus());
     }
 }
