@@ -35,3 +35,14 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Secrets ###
+.env
+.env.local
+.env.*.local
+
+### Claude Code ###
+.claude/
+
+### GitHub Actions ###
+.github/workflows/
