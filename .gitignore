@@ -46,3 +46,7 @@ out/
 
 ### GitHub Actions ###
 .github/workflows/
+
+### Build outputs ###
+build/
+.gradle/
